@@ -17,13 +17,13 @@ async function transcription(documentSnapshot: FirebaseFirestore.DocumentSnapsho
   // Google analytics
   // ----------------
 
-  const accountId = functions.config().analytics.account_id
+  const accountId = functions.config().analytics && functions.config().analytics.account_id
 
   if (!accountId) {
     console.warn("Google Analytics account ID missing")
   }
 
-  const visitor = ua(accountId)
+  // const visitor = ua(accountId)
 
   try {
     const startDate = Date.now()
@@ -56,41 +56,41 @@ async function transcription(documentSnapshot: FirebaseFirestore.DocumentSnapsho
 
     // Setting user id
 
-    visitor.set("uid", transcript.userId)
+    // visitor.set("uid", transcript.userId)
 
     // Setting custom dimensions
 
-    visitor.set("cd1", transcript.metadata.languageCodes.join(","))
-    visitor.set("cd2", transcript.metadata.originalMimeType)
+    // visitor.set("cd1", transcript.metadata.languageCodes.join(","))
+    // visitor.set("cd2", transcript.metadata.originalMimeType)
 
     if (transcript.metadata.industryNaicsCodeOfAudio) {
-      visitor.set("cd3", transcript.metadata.industryNaicsCodeOfAudio)
+      // visitor.set("cd3", transcript.metadata.industryNaicsCodeOfAudio)
     }
 
     if (transcript.metadata.interactionType) {
-      visitor.set("cd4", transcript.metadata.interactionType)
+      // visitor.set("cd4", transcript.metadata.interactionType)
     }
 
     if (transcript.metadata.microphoneDistance) {
-      visitor.set("cd5", transcript.metadata.microphoneDistance)
+      // visitor.set("cd5", transcript.metadata.microphoneDistance)
     }
 
     if (transcript.metadata.originalMediaType) {
-      visitor.set("cd6", transcript.metadata.originalMediaType)
+      // visitor.set("cd6", transcript.metadata.originalMediaType)
     }
 
     if (transcript.metadata.recordingDeviceName) {
-      visitor.set("cd7", transcript.metadata.recordingDeviceName)
+      // visitor.set("cd7", transcript.metadata.recordingDeviceName)
     }
 
     if (transcript.metadata.recordingDeviceType) {
-      visitor.set("cd8", transcript.metadata.recordingDeviceType)
+      // visitor.set("cd8", transcript.metadata.recordingDeviceType)
     }
 
     // Setting custom metrics
 
-    visitor.set("cm1", transcript.metadata.audioTopic ? transcript.metadata.audioTopic.split(" ").length : 0)
-    visitor.set("cm2", transcript.metadata.speechContexts ? transcript.metadata.speechContexts[0].phrases.length : 0)
+    // visitor.set("cm1", transcript.metadata.audioTopic ? transcript.metadata.audioTopic.split(" ").length : 0)
+    // visitor.set("cm2", transcript.metadata.speechContexts ? transcript.metadata.speechContexts[0].phrases.length : 0)
 
     // -----------------
     // Step 1: Transcode
@@ -98,14 +98,14 @@ async function transcription(documentSnapshot: FirebaseFirestore.DocumentSnapsho
 
     await database.setProgress(transcriptId, ProgressType.Analysing)
     const { audioDuration, gsUri } = await transcode(transcriptId, transcript.userId)
-    visitor.set("cm3", Math.round(audioDuration))
+    // visitor.set("cm3", Math.round(audioDuration))
 
     const transcodedDate = Date.now()
     const transcodedDuration = transcodedDate - startDate
 
-    visitor.set("cm5", Math.round(transcodedDuration / 1000))
-    visitor.event("transcription", "transcoded", transcriptId).send()
-    visitor.timing("transcription", "transcoding", Math.round(transcodedDuration), transcriptId).send()
+    // visitor.set("cm5", Math.round(transcodedDuration / 1000))
+    // visitor.event("transcription", "transcoded", transcriptId).send()
+    // visitor.timing("transcription", "transcoding", Math.round(transcodedDuration), transcriptId).send()
 
     console.log(transcriptId, "Transcoded duration", transcodedDuration)
 
@@ -137,22 +137,22 @@ async function transcription(documentSnapshot: FirebaseFirestore.DocumentSnapsho
 
       return
     }
-    visitor.set("cm4", numberOfWords)
+    // visitor.set("cm4", numberOfWords)
 
     // Calculating average confidence per word
     // Confidence will have high precision, i.e. 0.9290443658828735
     // We round it to two digits and log it as an integer, i.e. 9290,
     // since GA only supports decimal numbers for currency.
     const confidence = Math.round((accumulatedConfidence / numberOfWords) * 100 * 100)
-    visitor.set("cm9", confidence)
+    // visitor.set("cm9", confidence)
     console.log(transcriptId, "Confidence", confidence)
 
     const transcribedDate = Date.now()
     const transcribedDuration = transcribedDate - transcodedDate
 
-    visitor.set("cm6", Math.round(transcribedDuration / 1000))
-    visitor.event("transcription", "transcribed", transcriptId).send()
-    visitor.timing("transcription", "transcribing", Math.round(transcribedDuration), transcriptId).send()
+    // visitor.set("cm6", Math.round(transcribedDuration / 1000))
+    // visitor.event("transcription", "transcribed", transcriptId).send()
+    // visitor.timing("transcription", "transcribing", Math.round(transcribedDuration), transcriptId).send()
 
     console.log(transcriptId, "Transcribed duration", transcribedDuration)
 
@@ -168,16 +168,16 @@ async function transcription(documentSnapshot: FirebaseFirestore.DocumentSnapsho
 
     console.log(transcriptId, "Saved duration", savedDuration)
 
-    visitor.set("cm7", Math.round(savedDuration / 1000))
-    visitor.event("transcription", "saved", transcriptId).send()
-    visitor.timing("transcription", "saving", Math.round(savedDuration), transcriptId).send()
+    // visitor.set("cm7", Math.round(savedDuration / 1000))
+    // visitor.event("transcription", "saved", transcriptId).send()
+    // visitor.timing("transcription", "saving", Math.round(savedDuration), transcriptId).send()
 
     // Done
 
     const processDuration = savedDate - startDate
-    visitor.set("cm8", Math.round(processDuration / 1000))
+    // visitor.set("cm8", Math.round(processDuration / 1000))
 
-    visitor.event("transcription", "done", transcriptId, Math.round(audioDuration)).send()
+    // visitor.event("transcription", "done", transcriptId, Math.round(audioDuration)).send()
 
     await database.setProgress(transcriptId, ProgressType.Done)
 
@@ -216,7 +216,7 @@ async function transcription(documentSnapshot: FirebaseFirestore.DocumentSnapsho
 
     await sendEmail(mailData)
 
-    visitor.event("email", "transcription done", transcriptId).send()
+    // visitor.event("email", "transcription done", transcriptId).send()
   } catch (error) {
     // Log error to console
 
@@ -224,7 +224,7 @@ async function transcription(documentSnapshot: FirebaseFirestore.DocumentSnapsho
 
     // Log error to Google Analytics
 
-    visitor.exception(error.message, true).send()
+    // visitor.exception(error.message, true).send()
 
     // Log error to database
 

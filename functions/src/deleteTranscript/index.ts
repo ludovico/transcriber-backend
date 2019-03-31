@@ -9,7 +9,7 @@ async function deleteTranscript(data: any, context: functions.https.CallableCont
   // Google analytics
   // ----------------
 
-  const accountId = functions.config().analytics.account_id
+  const accountId = functions.config().analytics && functions.config().analytics.account_id
 
   if (!accountId) {
     console.warn("Google Analytics account ID missing")
